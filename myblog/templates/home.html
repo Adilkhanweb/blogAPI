@@ -1,30 +1,58 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load custom_tags %}
 
 {% block content %}
 
-<br/>
-<h1>Posts</h1>
-<br/>
-  {% for post in object_list %}
-  <div class="card">
-    <div class="card-header">
-      By:
-        {{ post.author.first_name }}
-        {{ post.author.last_name }} -
-        <a href="{% url 'category' post.category|slugify %}">#{{ post.category }}</a>
-         - {{ post.post_date }}
-    </div>
-    <div class="card-body">
-      <h5 class="card-title">{{ post.title }}</h5>
-      <p class="card-text">{{ post.body|truncatechars:"100"|safe}}</p>
-      <a href="{% url 'article-detail' post.pk %}" class="btn btn-primary">Read more</a>
-        {% if user.is_authenticated %}
-            <a href="{% url 'update_post' post.pk %}" class="btn btn-secondary">Edit</a>
-            <a href="{% url 'delete_post' post.pk %}" class="btn btn-danger ml-auto">Delete</a>
-        {% endif %}
-    </div>
-  </div>
-  <br/>
-  {% endfor %}
+    <!--
+      - #HERO SECTION
+    -->
 
+    <div class="hero">
+
+        <div class="nb_container">
+
+            <div class="left">
+
+                <h1 class="nb_h1">
+                    Hi! This is a <br><b>Dev&nbsp;Blog</b>.
+                    <br>
+                </h1>
+
+                <p class="nb_h3">
+                    A Lifestyle A Day Helps You Work,<br> Rest And Play.
+                </p>
+
+{#                <div class="nb_btn-group">#}
+{#                    <a href="#" class="nb_btn nb_btn-primary">Contact Me</a>#}
+{#                    <a href="#" class="nb_btn nb_btn-secondary">About Me</a>#}
+{#                </div>#}
+
+            </div>
+
+            <div class="right">
+
+                <div class="pattern-bg"></div>
+                <div class="img-box">
+                    <img src="{% random_image "images/main_section/" %}" alt="Julia Walker" class="hero-img" width="500">
+{#                    <div class="shape shape-1"></div>#}
+{#                    <div class="shape shape-2"></div>#}
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <main>
+        <div class="main">
+            <div class="nb_container">
+                {% include 'posts.html' %}
+                {% include 'aside.html' %}
+            </div>
+        </div>
+    </main>
+    {% include 'footer.html' %}
 {% endblock %}

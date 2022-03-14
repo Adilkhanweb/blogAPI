@@ -1,28 +1,124 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %}
-{{post.title_tag}}
+    {{ post.title_tag }}
 {% endblock %}
 
 {% block content %}
-<br/>
-<h1>{{ post.title }}</h1>
-<small>By:
-    {{ post.author.first_name }}
-    {{ post.author.last_name }} -
-    {{ post.post_date }}
-</small><br/>
+    <main>
+        <div class="main">
+            <div class="container">
+                <div style="max-width: 1080px; margin: auto">
+                    <h3 class="nb_h1">{{ post.title }}</h3>
+                    <p>By:
+                        {{ post.author.first_name }}
+                        {{ post.author.last_name }} -
+                        {{ post.post_date }}
+                    </p>
 
-<hr />
-<br />
-{{ post.body|safe }}
+                    <hr/>
+                    {{ post.body|safe }}
+                    <hr>
+                    {% if user.is_authenticated %}
+                        {% if user.id == post.author.id or user.username == 'admin' %}
+                            <a href="{% url 'update_post' post.pk %}" class="btn btn-primary">Edit</a>
+                            <!-- <a href="{% url 'home' %}">Back</a> -->
+                            <a href="{% url 'delete_post' post.pk %}" class="btn btn-danger">Delete</a>
+                        {% endif %}
+                    {% endif %}
+                    <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
+                    <hr>
+                    <form action="{% url 'like_post' post.pk %}" method="POST">
+                        {% if user.is_authenticated %}
+                            {% csrf_token %}
+                            {% if liked %}
+                                <button type="submit" name="post_id" value="{{ post.id }}"
+                                        class="btn btn-danger btn-sm">
+                                    Unlike
+                                </button> <span>- {{ total_likes }} Likes</span>
+                            {% else %}
+                                <button type="submit" name="post_id" value="{{ post.id }}"
+                                        class="btn btn-primary btn-sm">Like
+                                </button> <span>- {{ total_likes }} Likes</span>
+                            {% endif %}
+                        {% else %}
+                            <p><a href="{% url 'login' %}">Login</a> to like</p>
+                        {% endif %}
+                    </form>
 
-<br /><br />
-    {% if user.is_authenticated %}
-        <a href="{% url 'update_post' post.pk %}" class="btn btn-primary">Edit</a>
-        <!-- <a href="{% url 'home' %}">Back</a> -->
-        <a href="{% url 'delete_post' post.pk %}" class="btn btn-danger">Delete</a>
-    {% endif %}
-    <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+                    <br>
+                    <div class="comment-section">
+                        <h2>Comments</h2>
+                        {% if user.is_authenticated %}
+                            <form action="{% url 'add_comment' post.pk %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" id="id_comment_name" name="name" class="form-control">
+                                <p>
+                                    <label for="id_comment_body">Comment:</label>
+                                    <textarea type="text" id="id_comment_body" name="body" class="form-control">
+                                    </textarea>
+                                </p>
+                                <input type="hidden" id="author_id" name="user" class="form-control">
+                                <button class="nb_btn nb_btn-secondary">Add Comment</button>
+                            </form>
+                        {% else %}
+                            <h4>Login to leave comment</h4>
+                        {% endif %}
+                        {% if not post.comments.all %}
+                            <p>No Comments Yet...</p>
+                        {% else %}
+                            <div style="display: flex; align-items: center; justify-content: center"><h4>
+                                Total {{ post.comments.all.count }} comments</h4></div>
+                            {% for comment in post.comments.all reversed %}
+                                <div class="comment-card">
+                                    <div class="blog-content-wrapper">
+                                        <div class="wrapper-flex">
+                                            <div class="profile-wrapper">
+                                                {% if comment.user.profile.profile_pic %}
+                                                    <img src="{{ comment.user.profile.profile_pic.url }}"
+                                                         alt="author's avatar" width="50" height="50"
+                                                         style="object-fit: cover">
+                                                {% else %}
+                                                    <img src="{% static 'myblog/images/default-profile-pic.jpg' %}"
+                                                         alt="author's avatar" width="50" height="50">
+                                                {% endif %}
+                                            </div>
 
+                                            <div class="wrapper">
+                                                <a href="{% url 'show_profile_page' comment.user.profile.id %}"
+                                                   class="nb_h4">{{ comment.name }}</a>
+
+                                                <p class="text-sm">
+                                                    <time datetime="{{ comment.date_added }}">{{ comment.date_added|date }}</time>
+                                                    <span class="separator"></span>
+                                                    <ion-icon name="time-outline"></ion-icon>
+                                                    <time datetime="{{ comment.date_added|timesince }}">{{ comment.date_added|time }}
+                                                        - {{ comment.date_added|timesince }}
+                                                        ago
+                                                    </time>
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="comment-block">
+                                            <p>{{ comment.body }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script>
+        const nameField = document.getElementById('id_comment_name');
+        {% if user.is_authenticated %}
+            nameField.value = '{{ user.first_name }} {{ user.last_name }}';
+            let name = "{{ user.id }}";
+            document.getElementById("author_id").value = name;
+        {% else %}
+            nameField.value = 'Guest';
+        {% endif %}
+    </script>
 {% endblock %}
